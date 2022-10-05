@@ -3,7 +3,7 @@
 ## Project Introduction
 
 ```
-💡 서비스 소개: 다양한 관ㅅ미사를 가진 사람들과 같이 소통하는 서비스
+💡 서비스 소개: 다양한 관심사를 가진 사람들과 같이 소통하는 서비스
 ```
 
 ## Tech Stack
@@ -18,7 +18,7 @@
 ```bash
 src
 ├── app                 # app module
-├── core                # core(service, repository, entity, controller logic)
+├── core                # core(service, repository, entity, controller, module, dto logic)
 ├── global              # globals(config, entities, jwt, typeorm)
 ├── utils               # utils(exceptions, interceptors, logger)
 └── app.ts              # App entry point
