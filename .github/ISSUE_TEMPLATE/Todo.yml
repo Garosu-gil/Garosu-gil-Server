@@ -1,5 +1,5 @@
-name: "Todo"
-description: "할일이 있으신가요? 📗"
+name: 'Todo'
+description: '할일이 있으신가요? 📗'
 body:
   - type: textarea
     attributes:
@@ -22,4 +22,3 @@ body:
       label: Additional
       description: |
         [추가사항] 추가로 할말이 있으신가요?
-        

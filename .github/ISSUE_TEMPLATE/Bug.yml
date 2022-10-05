@@ -1,5 +1,5 @@
-name: "Bug"
-description: "버그가 생겼어요 😠"
+name: 'Bug'
+description: '버그가 생겼어요 😠'
 labels: 버그
 body:
   - type: textarea
@@ -19,4 +19,3 @@ body:
         2. Click on '....'
         3. Scroll down to '....'
         4. See error
-        
