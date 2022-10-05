@@ -4,6 +4,7 @@
 <p align="center">
   <img src="https://user-images.githubusercontent.com/81291090/194049853-df1e6fca-482b-4847-91ca-c5aac51d81b9.png" alt="logo" width="200px" />
 </p>
+
 ## Project Introduction
 
 ```
@@ -22,7 +23,7 @@
 ```bash
 src
 ├── app                 # app module
-├── core                # core(service, repository, entity, controller, module, dto logic)
+├── core                # core(service, repository, entity, controller, module logic)
 ├── global              # globals(config, entities, jwt, typeorm)
 ├── utils               # utils(exceptions, interceptors, logger)
 └── app.ts              # App entry point
