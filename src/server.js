@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const app = express();
-
+var request = require('request');
 const { conn } = require('../config/config');
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
@@ -51,7 +51,6 @@ app.post('/create_post', (req, res) => {
   const author = req.query.nickName
   const cafeName = req.query.name;
   var api_url = 'https://openapi.naver.com/v1/papago/detectLangs';
-  var request = require('request');
   var options = {
     url: api_url,
     form: { 'query':  `'${context}'`},
@@ -91,28 +90,31 @@ app.post('/create_post', (req, res) => {
 });
 
 app.get('/get_post', (req, res) => {
-  const context = req.query.context;
+  const cafeName = req.query.name;
   let postList = new Array();
-  conn.query(`select * from post where content Like '%${context}%'`, (err, result) => {
-    if (err) throw err;
-    for (let i = 0; i < result.length; i++) {
-      const author = result[i].author;
-      const content = result[i].content;
-      const date = result[i].createdAt
-      postList.push({
-        name: author,
-        content: content,
-        date: date,
-      });
-    }
-    console.log(postList);
-    conn.query(`select title from cafe where id = '${result[0].cafeId}'`, (err, result) => {
+  conn.query(`select id from cafe where title = '${cafeName}'`, (err, result) => {
+    const cafeId = result[0].id
+    conn.query(`select * from post where cafeId = ${cafeId}'`, (err, result) => {
       if (err) throw err;
-      res.json({
-        postList: postList,
+      for (let i = 0; i < result.length; i++) {
+        const author = result[i].author;
+        const content = result[i].content;
+        const date = result[i].createdAt
+        postList.push({
+          name: author,
+          content: content,
+          date: date,
+        });
+      }
+      console.log(postList);
+      conn.query(`select title from cafe where id = '${result[0].cafeId}'`, (err, result) => {
+        if (err) throw err;
+        res.json({
+          postList: postList,
+        });
       });
     });
-  });
+  })
 });
 
 app.get('/find_category', (req, res) => {
@@ -159,8 +161,12 @@ app.get('/search_cafe', (req, res) => {
 app.get('/translate', function (req, res) {
   const target = req.query.target
   const text = req.query.text
-
-  var api_url = 'https://openapi.naver.com/v1/papago/n2mt';
+  const textSlice = text.split(' ')
+  console.log(textSlice[0])
+  const key = process.env.AUTH_KEY
+  let arr = new Array();
+  var api_url = 'https://openapi.naver.com/v1/papago/n2mt/';
+  var api_url2 = encodeURI(`https://stdict.korean.go.kr/api/search.do?certkey_no=4445&key=${key}&type_search=search&req_type=json&q=${text}`)
   var request = require('request');
   conn.query(`select source from post where content = '${text}'`, (err, result) => {
     if(err) throw err;
