@@ -34,19 +34,11 @@ src
 
 ### Run
 
-development mode
+mode
 
 ```bash
 yarn install | npm install
-yarn start:dev | npm start:dev
-```
-
-production mode
-
-```bash
-yarn install | npm install
-yarn build | npm build
-yarn start:prod | npm start:prod
+yarn start | npm start
 ```
 
 ## License
