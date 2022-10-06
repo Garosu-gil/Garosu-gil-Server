@@ -18,4 +18,12 @@ const config = {
 
 const conn = mysql.createConnection(config);
 
+conn.connect(err => {
+  if (err) {
+    console.log(err);
+  } else {
+    console.log('mysql connecting...');
+  }
+});
+
 module.exports = { conn };
