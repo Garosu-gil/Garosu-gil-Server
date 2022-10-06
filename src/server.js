@@ -49,7 +49,7 @@ app.post('/create_cafe', (req, res) => {
 app.post('/create_post', (req, res) => {
   const context = req.query.context;
   const author = req.query.nickName
-  const cafeName = req.query.name;
+  const cafeName = req.query.cafeName;
   var api_url = 'https://openapi.naver.com/v1/papago/detectLangs';
   var options = {
     url: api_url,
