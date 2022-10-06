@@ -1,29 +1,23 @@
 const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
 const app = express();
-const { conn } = require('./config/config');
-const uuid = require('uuid-sequential');
 
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-app.use('/static', express.static('public'));
+const { conn } = require('../config/config');
+var client_id = process.env.CLIENT_ID;
+var client_secret = process.env.CLIENT_SECRET;
 
-function makeId(length) {
-  var result = '';
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
+const CorsOptions = {
+  origin: '*',
+  method: ['GET', 'POST', 'PATCH', 'DELETE', 'HEAD'],
+  credentials: true
 }
 
-conn.connect(err => {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log('mysql connecting...');
-  }
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cors(CorsOptions));
+app.use('/static', express.static('public'));
+app.use(morgan('combined'));
 
 app.get('/', (req, res) => {
   res.status(200).json({
@@ -40,7 +34,7 @@ app.post('/create_cafe', (req, res) => {
     if (err) throw err;
     const categoryId = results[0].id;
     conn.query(
-      `insert into cafe(id, title, explanation, categoryId) values('${uuid()}', '${title}', '${explanation}', '${categoryId}')`,
+      `insert into cafe(title, explanation, categoryId) values('${title}', '${explanation}', '${categoryId}')`,
       (err, results) => {
         if (err) throw err;
         res.json({
@@ -54,22 +48,40 @@ app.post('/create_cafe', (req, res) => {
 
 app.post('/create_post', (req, res) => {
   const context = req.query.context;
-  const author = '익명의 ' + makeId(5);
+  const author = req.query.nickName
   const cafeName = req.query.name;
-  conn.query(`select id from cafe where title = '${cafeName}'`, (err, result) => {
-    if (err) throw err;
-    const cafeId = result[0].id;
-    conn.query(
-      `insert into post(id, content, author, cafeId) values('${uuid()}', '${context}', '${author}', '${cafeId}')`,
-      (err, results) => {
+  var api_url = 'https://openapi.naver.com/v1/papago/detectLangs';
+  var request = require('request');
+  var options = {
+    url: api_url,
+    form: { 'query':  `'${context}'`},
+    headers: { 'X-Naver-Client-Id': client_id, 'X-Naver-Client-Secret': client_secret }
+  };
+  request.post(options, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const obj = JSON.parse(body);
+      const langCode = obj.langCode
+      console.log(langCode)
+      conn.query(`select id from cafe where title = '${cafeName}'`, (err, result) => {
         if (err) throw err;
-        res.json({
-          author: author,
-          content: context,
-          massage: 'insert 완료',
-        });
-      },
-    );
+        const cafeId = result[0].id;
+        conn.query(
+          `insert into post(content, author, cafeId, source) values('${context}', '${author}', '${cafeId}', '${langCode}')`,
+          (err, results) => {
+            if (err) throw err;
+            return res.json({
+              author: author,
+              content: context,
+              source : langCode,
+              massage: 'insert 완료',
+            });
+          },
+        );
+      });
+    } else {
+      console.log(error)
+      return res.json({ error : error})
+    }
   });
 });
 
@@ -141,6 +153,32 @@ app.get('/search_cafe', (req, res) => {
       });
     }
   });
+});
+
+app.get('/translate', function (req, res) {
+  const target = req.query.target
+  const text = req.query.text
+
+  var api_url = 'https://openapi.naver.com/v1/papago/n2mt';
+  var request = require('request');
+  conn.query(`select source from post where content = '${text}'`, (err, result) => {
+    if(err) throw err;
+    const source = result[0].source;
+    var options = {
+      url: api_url,
+      form: { 'source': `${source}`, 'target': `${target}`, 'text': `${text.toString()}` },
+      headers: { 'X-Naver-Client-Id': client_id, 'X-Naver-Client-Secret': client_secret }
+    };
+    request.post(options, function (error, response, body) {
+      if (!error && response.statusCode === 200) {
+        const obj = JSON.parse(body)
+        const translatedText = obj.message.result.translatedText
+        return res.send(translatedText);
+      } else {
+        return res.json({ error: error })
+      }
+    });
+  })
 });
 
 let port = 8888;
