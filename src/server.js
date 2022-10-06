@@ -57,6 +57,11 @@ app.post('/create_post', (req, res) => {
     form: { 'query':  `'${context}'`},
     headers: { 'X-Naver-Client-Id': client_id, 'X-Naver-Client-Secret': client_secret }
   };
+  const date = new Date();
+  var year = date.getFullYear().toString();
+  var month = ('0' + (date.getMonth() + 1)).slice(-2);
+  var day = ('0' + date.getDate()).slice(-2);
+  const finalDate = year + '/' + month + '/' + day;
   request.post(options, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const obj = JSON.parse(body);
@@ -66,7 +71,7 @@ app.post('/create_post', (req, res) => {
         if (err) throw err;
         const cafeId = result[0].id;
         conn.query(
-          `insert into post(content, author, cafeId, source) values('${context}', '${author}', '${cafeId}', '${langCode}')`,
+          `insert into post(content, author, createdAt, cafeId, source) values('${context}', '${author}', '${finalDate}','${cafeId}', '${langCode}')`,
           (err, results) => {
             if (err) throw err;
             return res.json({
@@ -93,15 +98,11 @@ app.get('/get_post', (req, res) => {
     for (let i = 0; i < result.length; i++) {
       const author = result[i].author;
       const content = result[i].content;
-      const date = new Date(result[i].createdAt);
-      var year = date.getFullYear().toString();
-      var month = ('0' + (date.getMonth() + 1)).slice(-2);
-      var day = ('0' + date.getDate()).slice(-2);
-      const finalDate = year + '/' + month + '/' + day;
+      const date = result[i].createdAt
       postList.push({
         name: author,
         content: content,
-        date: finalDate,
+        date: date,
       });
     }
     console.log(postList);
